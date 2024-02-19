@@ -45,7 +45,7 @@ class Robot:
         lc = self._MOTOR_DISTANCE
 
         # Constants based on the equations given
-        E = 2 * la * (lc + la * (np.cos(theta4) - np.cos(theta1)))
+        E = 2 * lb * (lc + la * (np.cos(theta4) - np.cos(theta1)))
         F = 2 * la * lb * (np.sin(theta4) - np.sin(theta1))
         G = lc**2 + 2 * la**2 + 2 * lc * la * np.cos(
             theta4) - 2 * lc * la * np.cos(theta1) - 2 * la**2 * np.cos(

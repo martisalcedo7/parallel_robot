@@ -51,7 +51,7 @@ def main():
     last_pos = None  # Store the last position of the mouse
 
     # Robot
-    initial_joint_position = np.array([np.pi/2, np.pi/2])
+    initial_joint_position = np.array([2.5, 0.6])
     parallel_robot = Robot(initial_joint_position)
 
     # initial_cartesian_position = parallel_robot._cartesian_position
