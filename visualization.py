@@ -3,12 +3,13 @@ import pygame
 import numpy as np
 
 from robot import Robot
+from trajectories import constant_velocity
 
 # Screen dimensions
-screen_width = 640
-screen_height = 480
+screen_width = 800
+screen_height = 600
 
-pixel_per_metre = 2000
+pixel_per_metre = 1800
 
 
 def scale(value):
@@ -50,8 +51,14 @@ def main():
     last_pos = None  # Store the last position of the mouse
 
     # Robot
-    parallel_robot = Robot(np.array([np.pi / 2, np.pi / 2]))
-    print(parallel_robot.get_cartesian_position())
+    initial_joint_position = np.array([np.pi/2, np.pi/2])
+    parallel_robot = Robot(initial_joint_position)
+
+    # initial_cartesian_position = parallel_robot._cartesian_position
+    # trajectory = constant_velocity(initial_cartesian_position, np.array([0.09, 0.06]), 0.01, 1/60)
+    trajectory = []
+
+    counter = 0
 
     # Clock to control the frame rate
     clock = pygame.time.Clock()
@@ -63,27 +70,35 @@ def main():
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                drawing = True
-                last_pos = pygame.mouse.get_pos()  # Start drawing
-            elif event.type == pygame.MOUSEBUTTONUP:
-                drawing = False
-                last_pos = None  # Reset last position
 
-        if drawing and last_pos:
-            # Draw line on canvas
-            current_pos = pygame.mouse.get_pos()
-            pygame.draw.line(canvas, white, last_pos, current_pos, 1)
-            last_pos = current_pos  # Update the last position for continuous drawing
+                mouse_x, mouse_y = pygame.mouse.get_pos()
 
-        # Move robot
-        mouse_x, mouse_y = pygame.mouse.get_pos()
+                mouse_x, mouse_y = inverse_offset(mouse_x, mouse_y)
+                mouse_x, mouse_y = inverse_scale(mouse_x), inverse_scale(mouse_y)
 
-        mouse_x, mouse_y = inverse_offset(mouse_x, mouse_y)
-        mouse_x, mouse_y = inverse_scale(mouse_x), inverse_scale(mouse_y)
+                if parallel_robot.in_workspace(np.array([mouse_x, mouse_y])):
+                    initial_cartesian_position = parallel_robot._cartesian_position
+                    trajectory = constant_velocity(initial_cartesian_position, np.array([mouse_x, mouse_y]), 0.1, 1/60)
+                    counter = 0
+                    drawing = False
 
-        parallel_robot._joint_position = parallel_robot.inverse_kinematics(
-            np.array([mouse_x, mouse_y]))
-        parallel_robot._cartesian_position = np.array([mouse_x, mouse_y])
+        # if parallel_robot.in_workspace(np.array([mouse_x, mouse_y])):
+
+        #     parallel_robot._joint_position = parallel_robot.inverse_kinematics(
+        #         np.array([mouse_x, mouse_y]))
+        #     parallel_robot._cartesian_position = np.array([mouse_x, mouse_y])
+        print(parallel_robot._joint_position)
+
+        #     if drawing and last_pos:
+        #         # Draw line on canvas
+        #         current_pos = pygame.mouse.get_pos()
+        #         pygame.draw.line(canvas, white, last_pos, current_pos, 1)
+        #         last_pos = current_pos  # Update the last position for continuous drawing
+        if counter < len(trajectory):
+            parallel_robot._joint_position = parallel_robot.inverse_kinematics(trajectory[counter])
+            parallel_robot._cartesian_position = trajectory[counter]
+            counter += 1
+
 
         # Blit the canvas onto the screen
         screen.blit(canvas, (0, 0))

@@ -21,6 +21,20 @@ class Robot:
     def get_cartesian_position(self):
         return self._cartesian_position
 
+    def in_workspace(self, cartesian_position):
+        in_area_1 = cartesian_position[0]**2 + cartesian_position[1]**2 >= (
+            self._BASE_ARM_LENGTH - self._LINK_ARM_LENGTH)**2
+        in_area_2 = (cartesian_position[0] -
+                     self._MOTOR_DISTANCE)**2 + cartesian_position[1]**2 >= (
+                         self._BASE_ARM_LENGTH - self._LINK_ARM_LENGTH)**2
+        in_area_3 = cartesian_position[0]**2 + cartesian_position[1]**2 <= (
+            self._BASE_ARM_LENGTH + self._LINK_ARM_LENGTH)**2
+        in_area_4 = (cartesian_position[0] -
+                     self._MOTOR_DISTANCE)**2 + cartesian_position[1]**2 <= (
+                         self._BASE_ARM_LENGTH + self._LINK_ARM_LENGTH)**2
+
+        return in_area_1 and in_area_2 and in_area_3 and in_area_4
+
     def _solve_forward_kinematics(self, joint_position: np.ndarray):
 
         theta1 = joint_position[0]
@@ -52,7 +66,7 @@ class Robot:
         x_p2 += self._TCP_OFFSET[0]
         y_p1 += self._TCP_OFFSET[1]
         y_p2 += self._TCP_OFFSET[1]
-
+        # return np.array([[x_p2, y_p2]])
         return np.array([[x_p1, y_p1], [x_p2, y_p2]])
 
     def _solve_inverse_kinematics(self, cartesian_position: np.ndarray):
@@ -162,13 +176,13 @@ class Robot:
         pygame.draw.line(screen, (255, 255, 255), (x3, y3), (x_tcp, y_tcp), 5)
         pygame.draw.circle(
             screen, (255, 255, 255), (x0, y0),
-            np.abs(self._BASE_ARM_LENGTH - self._LINK_ARM_LENGTH) * 2000, 1)
-        pygame.draw.circle(screen, (255, 255, 255), (x0, y0),
-                           (self._BASE_ARM_LENGTH + self._LINK_ARM_LENGTH) *
-                           2000, 1)
-        pygame.draw.circle(screen, (255, 255, 255), (x4, y4),
-                           (self._BASE_ARM_LENGTH + self._LINK_ARM_LENGTH) *
-                           2000, 1)
+            scale(np.abs(self._BASE_ARM_LENGTH - self._LINK_ARM_LENGTH)), 1)
+        pygame.draw.circle(
+            screen, (255, 255, 255), (x0, y0),
+            scale((self._BASE_ARM_LENGTH + self._LINK_ARM_LENGTH)), 1)
         pygame.draw.circle(
             screen, (255, 255, 255), (x4, y4),
-            np.abs(self._BASE_ARM_LENGTH - self._LINK_ARM_LENGTH) * 2000, 1)
+            scale((self._BASE_ARM_LENGTH + self._LINK_ARM_LENGTH)), 1)
+        pygame.draw.circle(
+            screen, (255, 255, 255), (x4, y4),
+            scale(np.abs(self._BASE_ARM_LENGTH - self._LINK_ARM_LENGTH)), 1)
