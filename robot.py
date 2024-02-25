@@ -1,5 +1,13 @@
 import numpy as np
 import pygame
+from dataclasses import dataclass
+
+
+@dataclass
+class Telemetry:
+    joint_position: np.ndarray
+    cartesian_position: np.ndarray
+    drawing: bool
 
 
 class Robot:
@@ -14,12 +22,14 @@ class Robot:
         self._joint_position = initial_joint_position
         self._cartesian_position = self.forward_kinematics(
             self._joint_position)
+        self._drawing = False
 
-    def get_joint_position(self):
-        return self._joint_position
+    def get_telemetry(self):
+        return Telemetry(self._joint_position, self._cartesian_position,
+                         self._drawing)
 
-    def get_cartesian_position(self):
-        return self._cartesian_position
+    def set_drawing(self, drawing):
+        self._drawing = drawing
 
     def set_joint_position(self, joint_position):
         self._joint_position = joint_position
@@ -119,80 +129,3 @@ class Robot:
         # return np.array([[theta1_pos, theta4_pos], [theta1_pos, theta4_neg],
         #                  [theta1_neg, theta4_pos], [theta1_neg, theta4_neg]])
 
-    # def forward_kinematics(self, joint_position: np.ndarray):
-
-    #     solutions = self._solve_forward_kinematics(joint_position)
-
-    #     # Calculate solution distances from the current position
-    #     distances = np.linalg.norm(solutions - self._cartesian_position,
-    #                                axis=1)
-
-    #     # Find the index of the closest solution
-    #     min_index = np.argmin(distances)
-
-    #     # Return the closest solution
-    #     return solutions[min_index]
-
-    # def inverse_kinematics(self, cartesian_position: np.ndarray):
-
-    #     solutions = self._solve_inverse_kinematics(cartesian_position)
-
-    #     # Calculate solution distances from the current position
-    #     distances = np.linalg.norm(solutions - self._joint_position, axis=1)
-
-    #     # Find the index of the closest solution
-    #     min_index = np.argmin(distances)
-
-    #     # Return the closest solution
-    #     return solutions[min_index]
-
-    def plot_robot(self, screen, scale, offset):
-
-        x0 = 0
-        y0 = 0
-        x0, y0 = scale(x0), scale(y0)
-        x0, y0 = offset(x0, y0)
-
-        x1 = self._BASE_ARM_LENGTH * np.cos(self._joint_position[0])
-        y1 = self._BASE_ARM_LENGTH * np.sin(self._joint_position[0])
-        x1, y1 = scale(x1), scale(y1)
-        x1, y1 = offset(x1, y1)
-
-        x2 = self._cartesian_position[0] - self._TCP_OFFSET[0]
-        y2 = self._cartesian_position[1] - self._TCP_OFFSET[1]
-        x2, y2 = scale(x2), scale(y2)
-        x2, y2 = offset(x2, y2)
-
-        x3 = self._BASE_ARM_LENGTH * np.cos(
-            self._joint_position[1]) + self._MOTOR_DISTANCE
-        y3 = self._BASE_ARM_LENGTH * np.sin(self._joint_position[1])
-        x3, y3 = scale(x3), scale(y3)
-        x3, y3 = offset(x3, y3)
-
-        x4 = self._MOTOR_DISTANCE
-        y4 = 0
-        x4, y4 = scale(x4), scale(y4)
-        x4, y4 = offset(x4, y4)
-
-        x_tcp = self._cartesian_position[0]
-        y_tcp = self._cartesian_position[1]
-        x_tcp, y_tcp = scale(x_tcp), scale(y_tcp)
-        x_tcp, y_tcp = offset(x_tcp, y_tcp)
-
-        pygame.draw.line(screen, (255, 255, 255), (x0, y0), (x1, y1), 5)
-        pygame.draw.line(screen, (255, 255, 255), (x1, y1), (x2, y2), 5)
-        pygame.draw.line(screen, (255, 255, 255), (x2, y2), (x3, y3), 5)
-        pygame.draw.line(screen, (255, 255, 255), (x3, y3), (x4, y4), 5)
-        pygame.draw.line(screen, (255, 255, 255), (x3, y3), (x_tcp, y_tcp), 5)
-        pygame.draw.circle(
-            screen, (255, 255, 255), (x0, y0),
-            scale(np.abs(self._BASE_ARM_LENGTH - self._LINK_ARM_LENGTH)), 1)
-        pygame.draw.circle(
-            screen, (255, 255, 255), (x0, y0),
-            scale((self._BASE_ARM_LENGTH + self._LINK_ARM_LENGTH)), 1)
-        pygame.draw.circle(
-            screen, (255, 255, 255), (x4, y4),
-            scale((self._BASE_ARM_LENGTH + self._LINK_ARM_LENGTH)), 1)
-        pygame.draw.circle(
-            screen, (255, 255, 255), (x4, y4),
-            scale(np.abs(self._BASE_ARM_LENGTH - self._LINK_ARM_LENGTH)), 1)
