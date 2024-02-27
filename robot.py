@@ -1,32 +1,27 @@
 import numpy as np
-import pygame
-from dataclasses import dataclass
 
 
-@dataclass
-class Telemetry:
-    joint_position: np.ndarray
-    cartesian_position: np.ndarray
-    drawing: bool
+class ParallelRobot:
 
+    def __init__(self,
+                 motor_distance: float,
+                 base_arm_length: float,
+                 link_arm_length: float,
+                 tcp_offset: np.ndarray = np.array([0.0, 0.0]),
+                 initial_joint_position: np.ndarray = np.array(
+                     [np.pi / 2, np.pi / 2])):
+        self._MOTOR_DISTANCE = motor_distance
+        self._BASE_ARM_LENGTH = base_arm_length
+        self._LINK_ARM_LENGTH = link_arm_length
+        self._TCP_OFFSET = tcp_offset
 
-class Robot:
-
-    # Units in metres
-    _MOTOR_DISTANCE = 0.05
-    _BASE_ARM_LENGTH = 0.05
-    _LINK_ARM_LENGTH = 0.08
-    _TCP_OFFSET = [0, 0]
-
-    def __init__(self, initial_joint_position: np.ndarray):
         self._joint_position = initial_joint_position
         self._cartesian_position = self.forward_kinematics(
             self._joint_position)
         self._drawing = False
 
-    def get_telemetry(self):
-        return Telemetry(self._joint_position, self._cartesian_position,
-                         self._drawing)
+    def get_state(self):
+        return (self._joint_position, self._cartesian_position, self._drawing)
 
     def set_drawing(self, drawing):
         self._drawing = drawing
@@ -128,4 +123,3 @@ class Robot:
         return np.array([theta1_pos, theta4_neg])
         # return np.array([[theta1_pos, theta4_pos], [theta1_pos, theta4_neg],
         #                  [theta1_neg, theta4_pos], [theta1_neg, theta4_neg]])
-
