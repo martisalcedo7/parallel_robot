@@ -1,20 +1,19 @@
 import numpy as np
 from time import sleep
 
-from parallel_robot_simulation import ParallelRobotSimulation, Command
+from parallel_robot.parallel_robot_simulation import ParallelRobotSimulation
+from parallel_robot.tools import Command
 
 
 def control_client():
 
-    MOTOR_DISTANCE = 0.05
+    MOTOR_DISTANCE = 0.08
     BASE_ARM_LENGTH = 0.05
     LINK_ARM_LENGTH = 0.08
-    TCP_OFFSET = np.array([0.0, 0.0])
+    TCP_OFFSET = np.array([0.0, 0.00])
 
     robot_simulation = ParallelRobotSimulation(MOTOR_DISTANCE, BASE_ARM_LENGTH,
                                                LINK_ARM_LENGTH, TCP_OFFSET)
-
-    
 
     r = 0.02
     command = Command(np.array([0.02619328 + r, 0.07476641]), False)
@@ -22,15 +21,17 @@ def control_client():
     # sleep(2)
     points = 40
     for angle in range(points):
-        x = r * np.cos(angle * 2 * np.pi / (points-1)) + 0.02619328
-        y = r * np.sin(angle * 2 * np.pi / (points-1)) + 0.07476641
+        x = r * np.cos(angle * 2 * np.pi / (points - 1)) + 0.02619328
+        y = r * np.sin(angle * 2 * np.pi / (points - 1)) + 0.07476641
         command = Command(np.array([float(x), float(y)]), True)
         robot_simulation.add_command(command)
     command = Command(np.array([0.0, 0.06]), False)
     robot_simulation.add_command(command)
 
     robot_simulation.start()
-    sleep(15)
+    while True:
+        print(robot_simulation.get_telemetry())
+        sleep(0.1)
     robot_simulation.stop()
     # while not stop_event.is_set():
     #     telemetry = telemetry_sharer.get_telemetry()

@@ -37,16 +37,18 @@ class ParallelRobot:
             self._cartesian_position)
 
     def in_workspace(self, cartesian_position):
-        in_area_1 = cartesian_position[0]**2 + cartesian_position[1]**2 >= (
+        x = cartesian_position[0]
+        y = cartesian_position[1]
+        x -= self._TCP_OFFSET[0]
+        y -= self._TCP_OFFSET[1]
+        in_area_1 = x**2 + y**2 >= (self._BASE_ARM_LENGTH -
+                                    self._LINK_ARM_LENGTH)**2
+        in_area_2 = (x - self._MOTOR_DISTANCE)**2 + y**2 >= (
             self._BASE_ARM_LENGTH - self._LINK_ARM_LENGTH)**2
-        in_area_2 = (cartesian_position[0] -
-                     self._MOTOR_DISTANCE)**2 + cartesian_position[1]**2 >= (
-                         self._BASE_ARM_LENGTH - self._LINK_ARM_LENGTH)**2
-        in_area_3 = cartesian_position[0]**2 + cartesian_position[1]**2 <= (
+        in_area_3 = x**2 + y**2 <= (self._BASE_ARM_LENGTH +
+                                    self._LINK_ARM_LENGTH)**2
+        in_area_4 = (x - self._MOTOR_DISTANCE)**2 + y**2 <= (
             self._BASE_ARM_LENGTH + self._LINK_ARM_LENGTH)**2
-        in_area_4 = (cartesian_position[0] -
-                     self._MOTOR_DISTANCE)**2 + cartesian_position[1]**2 <= (
-                         self._BASE_ARM_LENGTH + self._LINK_ARM_LENGTH)**2
 
         return in_area_1 and in_area_2 and in_area_3 and in_area_4
 

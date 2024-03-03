@@ -1,6 +1,7 @@
-from simulation import simulation
-from visualization import visualization
-from tools import TelemetrySharer, CommandSharer, Command, Telemetry, RobotConfiguration
+from .simulation import simulation
+from .visualization import Visualization
+from .tools import TelemetrySharer, CommandSharer, RobotConfiguration
+
 import threading
 import numpy as np
 from time import sleep
@@ -23,8 +24,6 @@ class ParallelRobotSimulation:
                                                        tcp_offset,
                                                        initial_joint_position)
 
-        self._visualization = visualization
-
         self._telemetry_sharer = TelemetrySharer()
         self._command_sharer = CommandSharer()
 
@@ -32,16 +31,18 @@ class ParallelRobotSimulation:
         self._visualization_thread = None
         self._simulation_thread = None
 
+        self._visualization = None
+        if visualization:
+            self._visualization = Visualization(
+                self._stop_event,
+                self._telemetry_sharer,
+                self._robot_configuration,
+            )
+
     def start(self):
         if self._visualization:
             self._visualization_thread = threading.Thread(
-                target=visualization,
-                daemon=True,
-                args=(
-                    self._stop_event,
-                    self._telemetry_sharer,
-                    self._robot_configuration,
-                ))
+                target=self._visualization.main_loop, daemon=True, args=())
 
             self._visualization_thread.start()
 
@@ -69,5 +70,4 @@ class ParallelRobotSimulation:
         self._command_sharer.add_command(command)
 
     def get_telemetry(self):
-        self._telemetry_sharer.get_telemetry()
-
+        return self._telemetry_sharer.get_telemetry()

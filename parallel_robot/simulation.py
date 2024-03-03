@@ -1,8 +1,9 @@
-from tools import TimeManager, Telemetry
-from robot import ParallelRobot
-import numpy as np
-from copy import deepcopy
-from trajectories import constant_velocity
+from .tools import TimeManager, Telemetry
+from .robot import ParallelRobot
+from .trajectories import constant_velocity
+
+SAMPLING_TIME = 0.001
+
 
 def simulation(stop_event, telemetry_sharer, command_sharer,
                robot_configuration):
@@ -10,7 +11,6 @@ def simulation(stop_event, telemetry_sharer, command_sharer,
     parallel_robot = ParallelRobot(*robot_configuration)
 
     # Clock to control the frame rate
-    SAMPLING_TIME = 0.001
     time_manager = TimeManager(SAMPLING_TIME)
 
     counter = 0
@@ -26,19 +26,20 @@ def simulation(stop_event, telemetry_sharer, command_sharer,
             command = command_sharer.get_command()
             if command is not None:
                 trajectory = constant_velocity(state[1],
-                                            command.cartesian_position, 0.1,
-                                            SAMPLING_TIME)
+                                               command.cartesian_position, 0.1,
+                                               SAMPLING_TIME)
                 parallel_robot.set_drawing(command.drawing)
 
         if counter < len(trajectory):
-            parallel_robot.set_cartesian_position(trajectory[counter])
+            if parallel_robot.in_workspace(trajectory[counter]):
+                parallel_robot.set_cartesian_position(trajectory[counter])
             counter += 1
         else:
             counter = 0
             trajectory = []
             # parallel_robot.set_drawing(False)
 
-        # Cap the frame rate
+        # Control frequency
         time_manager.adaptive_sleep()
 
 
