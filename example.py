@@ -1,6 +1,5 @@
 import numpy as np
 from time import sleep
-
 from parallel_robot import ParallelRobotSimulation, Command
 
 

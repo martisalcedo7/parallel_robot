@@ -79,3 +79,6 @@ class ParallelRobotSimulation:
 
     def get_telemetry(self):
         return self._telemetry_sharer.get_telemetry()
+    
+    def get_robot_configuration(self):
+        return self._robot_configuration
