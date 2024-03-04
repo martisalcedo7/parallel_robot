@@ -1,8 +1,7 @@
 import numpy as np
 from time import sleep
 
-from parallel_robot.parallel_robot_simulation import ParallelRobotSimulation
-from parallel_robot.tools import Command
+from parallel_robot import ParallelRobotSimulation, Command
 
 
 def control_client():
