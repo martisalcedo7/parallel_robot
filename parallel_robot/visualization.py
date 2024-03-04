@@ -103,41 +103,47 @@ class Visualization:
 
     def main_loop(self):
         """Main loop for running the visualization."""
-        pygame.init()
+        try:
+            pygame.init()
 
-        screen = pygame.display.set_mode(
-            (self._screen_width, self._screen_height))
+            screen = pygame.display.set_mode(
+                (self._screen_width, self._screen_height))
 
-        pygame.display.set_caption('Parallel Robot Simulator')
+            pygame.display.set_caption('Parallel Robot Simulator')
 
-        font = pygame.font.SysFont(None, 24)
+            font = pygame.font.SysFont(None, 24)
 
-        canvas = pygame.Surface(screen.get_size())
-        canvas.fill(black)  # Black color for canvas background
+            canvas = pygame.Surface(screen.get_size())
+            canvas.fill(black)  # Black color for canvas background
 
-        time_manager = TimeManager(0.001)
+            time_manager = TimeManager(0.001)
 
-        previous_telemetry = None  # Initialize previous_telemetry
+            previous_telemetry = None  # Initialize previous_telemetry
 
-        while not self._stop_event.is_set():
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
+            while not self._stop_event.is_set():
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        self._stop_event.set()
 
-            telemetry = self._telemetry_sharer.get_telemetry()
-            if telemetry and previous_telemetry and telemetry.drawing:
-                last_pos = self.robot_to_screen_coordinates(
-                    *previous_telemetry.cartesian_position)
-                current_pos = self.robot_to_screen_coordinates(
-                    *telemetry.cartesian_position)
-                pygame.draw.line(canvas, orange, last_pos, current_pos, 1)
+                telemetry = self._telemetry_sharer.get_telemetry()
+                if telemetry and previous_telemetry and telemetry.drawing:
+                    last_pos = self.robot_to_screen_coordinates(
+                        *previous_telemetry.cartesian_position)
+                    current_pos = self.robot_to_screen_coordinates(
+                        *telemetry.cartesian_position)
+                    pygame.draw.line(canvas, orange, last_pos, current_pos, 1)
 
-            previous_telemetry = telemetry  # Update previous_telemetry for the next iteration
+                previous_telemetry = telemetry  # Update previous_telemetry for the next iteration
 
-            screen.blit(canvas, (0, 0))
-            self.draw_axes(screen, font)
-            self.draw_robot(screen, telemetry)
-            pygame.display.flip()
+                screen.blit(canvas, (0, 0))
+                self.draw_axes(screen, font)
+                self.draw_robot(screen, telemetry)
+                pygame.display.flip()
 
-            time_manager.adaptive_sleep()
+                time_manager.adaptive_sleep()
+
+        except Exception as e:
+            print(f"Exception {e}. Stopping visualization.")
+            self._stop_event.set()
+        finally:
+            pygame.quit()

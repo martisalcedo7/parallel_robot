@@ -4,8 +4,8 @@ from .tools import TelemetrySharer, CommandSharer, RobotConfiguration
 
 import threading
 import numpy as np
-from time import sleep
-
+import signal
+import sys
 
 class ParallelRobotSimulation:
 
@@ -31,6 +31,8 @@ class ParallelRobotSimulation:
         self._visualization_thread = None
         self._simulation_thread = None
 
+        self._signal = signal.signal(signal.SIGINT, self._signal_handler)
+
         self._visualization = None
         if visualization:
             self._visualization = Visualization(
@@ -38,6 +40,10 @@ class ParallelRobotSimulation:
                 self._telemetry_sharer,
                 self._robot_configuration,
             )
+
+    def _signal_handler(self, _sig, _frame):
+        print("Ctrl+C exiting the program.")
+        self.stop()
 
     def start(self):
         if self._visualization:
@@ -65,6 +71,8 @@ class ParallelRobotSimulation:
             self._visualization_thread.join()
 
         self._simulation_thread.join()
+
+        sys.exit(0)
 
     def add_command(self, command):
         self._command_sharer.add_command(command)
