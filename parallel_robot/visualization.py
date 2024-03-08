@@ -17,22 +17,46 @@ class Visualization:
     def __init__(self, stop_event, telemetry_sharer, robot_configuration):
         self._screen_width = 800
         self._screen_height = 600
-        self._pixel_per_metre = 2000
+        self._pixel_per_metre = None
+        self._font = None
 
         self._stop_event = stop_event
         self._telemetry_sharer = telemetry_sharer
         self._robot_configuration = robot_configuration
 
+        # Calculate scale based on screen size and robot size
+        robot_width = 2 * np.abs(self._robot_configuration.motor_distance -
+                                 self._robot_configuration.base_arm_length -
+                                 self._robot_configuration.link_arm_length
+                                 ) + self._robot_configuration.motor_distance
+        robot_height = 2 * (
+            (self._robot_configuration.base_arm_length +
+             self._robot_configuration.link_arm_length)**2 -
+            (self._robot_configuration.motor_distance / 2.0)**2)**0.5
+        screen_ratio = self._screen_width / self._screen_height
+        robot_ratio = robot_width / robot_height
+        if robot_ratio >= screen_ratio:
+            self._pixel_per_metre = self._screen_width / robot_width
+        else:
+            self._pixel_per_metre = self._screen_height / robot_height
+
     def scale(self, value):
         """Scales a value based on pixels per metre."""
         return value * self._pixel_per_metre
 
-    def robot_to_screen_coordinates(self, x, y):
+    def robot_to_screen_coordinates(self, robot_x, robot_y):
         """Converts robot coordinates to screen coordinates."""
         center_offset = (self._screen_width / 2.0) - (
             self.scale(self._robot_configuration.motor_distance) / 2.0)
-        return center_offset + self.scale(x), (self._screen_height /
-                                               2.0) - self.scale(y)
+        return center_offset + self.scale(robot_x), (self._screen_height /
+                                                     2.0) - self.scale(robot_y)
+
+    def screen_to_robot_coordinates(self, screen_x, screen_y):
+        """Converts screen coordinates to robot coordinates."""
+        x = (screen_x - (self._screen_width / 2.0)) / self._pixel_per_metre + (
+            self._robot_configuration.motor_distance / 2.0)
+        y = -((screen_y - (self._screen_height / 2.0)) / self._pixel_per_metre)
+        return x, y
 
     def draw_robot(self, screen, telemetry):
         """Draws the robot based on telemetry data."""
@@ -83,10 +107,8 @@ class Visualization:
                 self.scale(self._robot_configuration.base_arm_length +
                            self._robot_configuration.link_arm_length), 1)
 
-    def draw_axes(self, screen, font):
+    def draw_axes(self, screen):
         """Draws coordinate axes on the screen."""
-        red = (255, 0, 0)
-        green = (0, 255, 0)
         center_x, center_y = self.robot_to_screen_coordinates(0, 0)
 
         # Draw arrows and labels for axes
@@ -96,22 +118,30 @@ class Visualization:
         pygame.draw.line(screen, green, (center_x, center_y),
                          (center_x, center_y - arrow_length), 2)
 
-        x_label = font.render('x', True, red)
-        y_label = font.render('y', True, green)
+        x_label = self._font.render('x', True, red)
+        y_label = self._font.render('y', True, green)
         screen.blit(x_label, (center_x + arrow_length + 5, center_y))
         screen.blit(y_label, (center_x, center_y - arrow_length - 20))
+
+    def print_mouse_position(self, screen):
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        mouse_x, mouse_y = self.screen_to_robot_coordinates(mouse_x, mouse_y)
+        text = f"({mouse_x:.4f},{mouse_y:.4f})"
+        text_surface = self._font.render(text, True, white)
+        screen.blit(text_surface,
+                    (0, self._screen_height - self._font.size(text)[1]))
 
     def main_loop(self):
         """Main loop for running the visualization."""
         try:
             pygame.init()
 
+            self._font = pygame.font.SysFont(None, 24)
+
             screen = pygame.display.set_mode(
                 (self._screen_width, self._screen_height))
 
             pygame.display.set_caption('Parallel Robot Simulator')
-
-            font = pygame.font.SysFont(None, 24)
 
             canvas = pygame.Surface(screen.get_size())
             canvas.fill(black)  # Black color for canvas background
@@ -136,7 +166,8 @@ class Visualization:
                 previous_telemetry = telemetry  # Update previous_telemetry for the next iteration
 
                 screen.blit(canvas, (0, 0))
-                self.draw_axes(screen, font)
+                self.print_mouse_position(screen)
+                self.draw_axes(screen)
                 self.draw_robot(screen, telemetry)
                 pygame.display.flip()
 
