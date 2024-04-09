@@ -17,7 +17,7 @@ def control_client():
     command = Command(np.array([0.02619328 + r, 0.07476641]), False)
     robot_simulation.add_command(command)
     # sleep(2)
-    points = 40
+    points = 5
     for angle in range(points):
         x = r * np.cos(angle * 2 * np.pi / (points - 1)) + 0.02619328
         y = r * np.sin(angle * 2 * np.pi / (points - 1)) + 0.07476641

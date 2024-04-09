@@ -16,10 +16,11 @@ def constant_velocity(initial_position, final_position, max_velocity,
     vy = (final_position[1] - initial_position[1]) / time_to_destination
 
     # Generate the trajectory
-    num_samples = int(time_to_destination / sampling_time) + 1
-    trajectory = [initial_position]  # Start with the initial position
-    for i in range(1, num_samples):
-        t = i * sampling_time
+    num_samples = int(time_to_destination / sampling_time)
+    trajectory = []
+    # trajectory = [initial_position]  # Start with the initial position
+    for i in range(num_samples):
+        t = (i + 1) * sampling_time
         x = initial_position[0] + vx * t
         y = initial_position[1] + vy * t
         trajectory.append(np.array([x, y]))
