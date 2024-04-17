@@ -28,7 +28,7 @@ def simulation(stop_event, telemetry_sharer, command_sharer,
                 if command is not None:
                     trajectory = constant_velocity(state[1],
                                                    command.cartesian_position,
-                                                   0.02, SAMPLING_TIME)
+                                                   0.5, SAMPLING_TIME)
                     parallel_robot.set_drawing(command.drawing)
 
             if counter < len(trajectory):

@@ -52,10 +52,14 @@ class CommandSharer:
 
     def __init__(self):
         self._commands_queue = queue.Queue()
+        self._lock = threading.Lock()
+        self._number_of_commands = 0
 
     def add_command(self, command):
         try:
             self._commands_queue.put(deepcopy(command), block=False)
+            with self._lock:
+                self._number_of_commands += 1
         except queue.Full:
             return False
         return True
@@ -63,9 +67,17 @@ class CommandSharer:
     def get_command(self):
         try:
             command = self._commands_queue.get(block=False)
+            with self._lock:
+                self._number_of_commands -= 1
         except queue.Empty:
             return None
         return deepcopy(command)
+    
+    def get_number_of_commands(self):
+        number_of_commands = 0
+        with self._lock:
+            number_of_commands = self._number_of_commands
+        return number_of_commands
 
 
 class TimeManager:

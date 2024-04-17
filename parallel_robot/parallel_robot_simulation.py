@@ -6,6 +6,7 @@ import threading
 import numpy as np
 import signal
 import sys
+from time import sleep
 
 class ParallelRobotSimulation:
 
@@ -73,6 +74,11 @@ class ParallelRobotSimulation:
         self._simulation_thread.join()
 
         sys.exit(0)
+    
+    def wait_until_no_commands(self):
+        while self._command_sharer.get_number_of_commands() > 0:
+            sleep(0.5)
+        self.stop()
 
     def add_command(self, command):
         self._command_sharer.add_command(command)
