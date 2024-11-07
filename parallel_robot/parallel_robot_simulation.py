@@ -78,7 +78,6 @@ class ParallelRobotSimulation:
     def wait_until_no_commands(self):
         while self._command_sharer.get_number_of_commands() > 0:
             sleep(0.5)
-        self.stop()
 
     def add_command(self, command):
         self._command_sharer.add_command(command)
